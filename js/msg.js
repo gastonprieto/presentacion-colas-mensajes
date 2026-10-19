@@ -428,14 +428,14 @@
 
     _drawSlots() {
       const s = this.svc, n = this.slots.length, g = s.slotsG;
-      const sw = Math.min(70, (s.hw * 2 - 30) / n - 8), sh = 34;
+      const sw = Math.min(76, (s.hw * 2 - 30) / n - 8), sh = 48;
       const sig = this.slots.map(m => (m ? 1 : 0)).join('');
       if (g._sig !== sig || !g.childNodes.length) {
         g._sig = sig;
         g.innerHTML = '';
         this.slots.forEach((m, i) => {
           const x = -((n * (sw + 8)) - 8) / 2 + i * (sw + 8);
-          const cell = svgEl('g', { transform: `translate(${x},${s.hh - sh - 26})` }, g);
+          const cell = svgEl('g', { transform: `translate(${x},${-sh / 2 + 16})` }, g);
           svgEl('rect', { class: 'slot' + (m ? ' busy' : ''), width: sw, height: sh, rx: 6 }, cell);
           svgEl('rect', { class: 'bar-bg', x: 6, y: sh - 10, width: sw - 12, height: 5, rx: 2.5 }, cell);
           svgEl('rect', { class: 'prog', x: 6, y: sh - 10, width: 0, height: 5, rx: 2.5 }, cell);
@@ -445,7 +445,9 @@
         const bar = g.childNodes[i] && g.childNodes[i].childNodes[2];
         if (bar) bar.setAttribute('width', m && m.start != null ? Math.min(1, (this.now - m.start) / m.dur) * (sw - 12) : 0);
       });
-      s.title.textContent = `${this.o.labels.service} · ${this.slots.filter(Boolean).length}/${n} ocupados`;
+      const busy = this.slots.filter(Boolean).length;
+      s.title.textContent = `${this.o.labels.service} · ${busy}/${n} ocupados`;
+      if (this.prod.sub) this.prod.sub.textContent = busy ? `⏳ ${busy} esperando` : this.o.labels.producerSub;
     }
 
     _drawQueue() {

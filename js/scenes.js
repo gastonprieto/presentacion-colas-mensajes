@@ -43,7 +43,20 @@
     slide.querySelectorAll('[data-mode]').forEach(el => { el.hidden = el.dataset.mode !== mode; });
   }
 
-  const life = sim => ({ start: () => sim.start(), stop: () => sim.stop() });
+  const life = sim => ({ start: () => sim.start(), stop: () => sim.stop(), sim });
+
+  // Crea un MsgSim sobre <svg class="sim"> y conecta .mstats y canvas.qchart si existen
+  function msetup(slide, opts) {
+    const sim = new MsgKit.MsgSim(slide.querySelector('svg.sim'), opts);
+    const st = slide.querySelector('.mstats');
+    if (st) Widgets.mstats(st, sim, st.dataset.fields.split(','), +(st.dataset.window || 5));
+    const qc = slide.querySelector('canvas.qchart');
+    if (qc && Widgets.qchart) Widgets.qchart(qc, sim);
+    return sim;
+  }
+
+  const fmtRate = r => `${String(r).replace('.', ',')} /s`;
+  const FACTURA = { producer: 'App', producerSub: 'pide la factura', service: 'Facturación', serviceSub: 'genera el PDF · 1,5 s', worker: 'Worker' };
 
   /* ---------- 1. portada: simulación decorativa de fondo ---------- */
 
@@ -51,6 +64,34 @@
     const sim = new Sim(slide.querySelector('svg.bg'), {
       clients: 3, servers: 4, rate: 5, colorByClient: true, showHandled: false, serviceTime: 0.6
     });
+    return life(sim);
+  };
+
+  /* ---------- 2. sincrónico: el que pide espera; sin lugar → 503 ---------- */
+
+  S.sync = slide => {
+    const base = { mode: 'sync', rate: 2, slots: 3, workTime: 1.5, seed: 2, labels: FACTURA };
+    const sim = msetup(slide, base);
+    const range = slide.querySelector('input[type=range]');
+    const out = slide.querySelector('.rate-out'), cap = slide.querySelector('.cap-out');
+    const sync = () => {
+      const r = +range.value, c = sim.o.slots / sim.o.workTime;
+      out.textContent = fmtRate(r);
+      cap.innerHTML = `capacidad ≈ <b>${String(c).replace('.', ',')}</b> pedidos/s · ${r > c ? '<b style="color:#f87171">se satura</b>' : 'da abasto'}`;
+    };
+    range.addEventListener('input', () => { sim.setRate(+range.value); sync(); });
+    on(slide, '[data-act=reset]', () => { range.value = 2; sim.reset(base); sync(); });
+    sync();
+    return life(sim);
+  };
+
+  /* ---------- 3. asincrónico: misma carga, sincrónico vs. con cola ---------- */
+
+  S.async = slide => {
+    const opts = mode => ({ mode, rate: 4, slots: 3, workers: 2, workTime: 1.5, seed: 3, labels: FACTURA });
+    const sim = msetup(slide, opts('sync'));
+    showMode(slide, 'sync');
+    seg(slide, 'mode', v => { showMode(slide, v); sim.reset(opts(v)); });
     return life(sim);
   };
 

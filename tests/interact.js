@@ -185,6 +185,50 @@ test('msg: resultados independientes de la velocidad', async page => {
   check(a.sent === b.sent && a.rejected === b.rejected, `0,25×=${JSON.stringify(a)} 1,5×=${JSON.stringify(b)}`);
 });
 
+/* ---------- escenas ---------- */
+// índices de slide (0 = portada)
+const SL = { sync: 1, async: 2, peak: 3, workers: 4, decouple: 5, when: 6, failures: 7, summary: 8 };
+
+test('escena: sync rechaza al subir el slider', async page => {
+  await open(page);
+  const r = await evalScene(page, SL.sync, sec => {
+    const range = sec.querySelector('input[type=range]');
+    range.value = 6;
+    range.dispatchEvent(new Event('input'));
+    const sim = sec._scene.sim;
+    sim.fastForward(15);
+    sim._frame();
+    return { rejected: sim.window(5).rejected, rate: sim.o.rate, shown: +sec.querySelector('.mstats [data-f=rejected]').textContent };
+  });
+  check(r.rate === 6, `rate=${r.rate}`);
+  check(r.rejected > 0, `rejected=${r.rejected}`);
+  check(r.shown > 0, `mstats muestra rechazados=${r.shown}`);
+});
+
+test('escena: async cambia de modo sin rechazos', async page => {
+  await open(page);
+  const r = await evalScene(page, SL.async, sec => {
+    sec.querySelector('.seg[data-group=mode] button[data-v=queue]').click();
+    const sim = sec._scene.sim;
+    sim.fastForward(15);
+    return { mode: sim.o.mode, rejected: sim.window(5).rejected, sent: sim.window(5).sent };
+  });
+  check(r.mode === 'queue', `mode=${r.mode}`);
+  check(r.sent > 20, `sent=${r.sent}`);
+  check(r.rejected === 0, `rejected=${r.rejected}`);
+});
+
+test('escena: stop/start no genera ráfaga', async page => {
+  await open(page);
+  await goto(page, SL.sync);
+  const before = await page.evaluate(i => { const s = window.__sec(i)._scene; s.stop(); return s.sim.window(5).sent; }, SL.sync);
+  await sleep(2000);
+  await page.evaluate(i => window.__sec(i)._scene.start(), SL.sync);
+  await sleep(300);
+  const after = await page.evaluate(i => window.__sec(i)._scene.sim.window(5).sent, SL.sync);
+  check(after - before <= 2, `ráfaga: ${before} → ${after}`);
+});
+
 /* ---------- runner ---------- */
 
 (async () => {

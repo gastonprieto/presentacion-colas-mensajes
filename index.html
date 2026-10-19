@@ -36,6 +36,69 @@
   </aside>
 </section>
 
+<!-- ============ 2. SINCRÓNICO ============ -->
+<section data-scene="sync">
+  <div class="kicker red">Sincrónico</div>
+  <h2>"Te espero hasta que termines"</h2>
+  <div class="demo">
+    <div class="stage">
+      <svg class="sim"></svg>
+      <div class="legend"><span><i style="background:#7dd3fc"></i>pedido</span><span><i style="background:#4ade80"></i>respuesta</span><span><i style="background:#f87171"></i>503</span></div>
+    </div>
+    <div class="panel">
+      <p class="lead">La app pide una factura en PDF y <b>se queda esperando</b> hasta que el servicio termina. Mientras tanto, ese lugar está ocupado.</p>
+      <div class="box">
+        <div class="label">Pedidos por segundo</div>
+        <div class="slider-row"><input type="range" min="1" max="6" step="0.5" value="2"><span class="rate-out">2 /s</span></div>
+        <div class="slider-row" style="margin-top:6px;font-size:13px"><span class="cap-out" style="font-size:13px"></span></div>
+      </div>
+      <div class="actions"><button class="btn ghost" data-act="reset">↺ Reiniciar</button></div>
+      <div class="mstats" data-fields="sent,rejected,respP95"></div>
+      <ul class="points">
+        <li class="fragment">Cada pedido ocupa un lugar durante <b>todo</b> el trabajo.</li>
+        <li class="fragment">Si llegan más de los que entran: <b>503</b>, como vimos con load balancing.</li>
+      </ul>
+    </div>
+  </div>
+  <aside class="notes">
+    Arrancar con 2 pedidos por segundo: el servicio da abasto (3 lugares, 1,5 s cada trabajo → 2 por segundo).
+    Subir el slider a 4 o más: se llenan los lugares y aparecen los 503.
+    Remarcar que el usuario está mirando un spinner durante todo el trabajo, aunque no necesite el PDF en ese momento.
+    Pregunta para la clase: ¿qué hace el usuario mientras se genera el PDF? ¿Lo necesita ya?
+  </aside>
+</section>
+
+<!-- ============ 3. ASINCRÓNICO ============ -->
+<section data-scene="async">
+  <div class="kicker green">Asincrónico</div>
+  <h2>"Te dejo el pedido y sigo"</h2>
+  <div class="demo">
+    <div class="stage">
+      <svg class="sim"></svg>
+      <div class="legend"><span><i style="background:#7dd3fc"></i>mensaje</span><span><i style="background:#fb923c"></i>en la cola</span><span><i style="background:#4ade80"></i>terminado</span><span><i style="background:#f87171"></i>503</span></div>
+    </div>
+    <div class="panel">
+      <p class="lead">Mismo trabajo, misma carga. Con una cola, la app <b>deja el mensaje y sigue</b>: un worker lo procesa cuando puede.</p>
+      <div class="seg" data-group="mode">
+        <button data-v="sync" class="active">Sincrónico</button>
+        <button data-v="queue">Con cola</button>
+      </div>
+      <p class="mode-text" data-mode="sync">El usuario espera todo el trabajo, y si no hay lugar recibe un 503.</p>
+      <p class="mode-text" data-mode="queue">La respuesta es inmediata: <b>202 Aceptado</b>. El trabajo se hace después.</p>
+      <div class="mstats" data-fields="respP95,doneP95,rejected"></div>
+      <ul class="points">
+        <li class="fragment">La cola baja el tiempo de <b>respuesta</b>…</li>
+        <li class="fragment">…pero no el tiempo hasta que el trabajo <b>está hecho</b>.</li>
+      </ul>
+    </div>
+  </div>
+  <aside class="notes">
+    Mostrar primero el modo sincrónico: respuesta lenta y 503.
+    Cambiar a "Con cola": la respuesta pasa a ser inmediata y desaparecen los 503, pero el tiempo hasta terminar no mejora (crece si llegan más de los que se procesan).
+    Pregunta para la clase: ¿en qué casos le alcanza al usuario con un "recibido, te aviso"?
+  </aside>
+</section>
+
 </div>
 </div>
 

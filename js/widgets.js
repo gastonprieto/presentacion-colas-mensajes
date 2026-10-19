@@ -172,5 +172,28 @@
     });
   }
 
-  window.Widgets = { stats, chart, histogram, strip, fmtLat };
+  /* ---------- widgets que leen un MsgSim (js/msg.js) ---------- */
+
+  const MLABELS = {
+    sent: 'Enviados', accepted: 'Aceptados', rejected: 'Rechazados (503)', done: 'Terminados',
+    queueLen: 'En la cola', dup: 'Duplicados', dlq: 'En la DLQ',
+    respP95: 'Respuesta p95', doneP95: 'Hasta terminar p95'
+  };
+
+  function mstats(el, sim, fields, win = 5) {
+    el.classList.add('stats');
+    el.innerHTML = fields
+      .map(f => `<div class="stat s-${f}"><b data-f="${f}">0</b><span>${MLABELS[f]}</span></div>`)
+      .join('');
+    const cells = {};
+    fields.forEach(f => { cells[f] = el.querySelector(`[data-f="${f}"]`); });
+    const update = () => {
+      const w = sim.window(win);
+      fields.forEach(f => { cells[f].textContent = /P\d/.test(f) ? fmtLat(w[f]) : w[f]; });
+    };
+    throttle(sim, 0.25, update);
+    update();
+  }
+
+  window.Widgets = { stats, chart, histogram, strip, fmtLat, mstats };
 })();
