@@ -195,5 +195,41 @@
     update();
   }
 
-  window.Widgets = { stats, chart, histogram, strip, fmtLat, mstats };
+  // Gráfico en vivo de 30 s: mensajes en la cola (eje izq.) y mensajes por segundo que entran y salen (eje der.)
+  function qchart(canvas, sim) {
+    const N = 60;
+    const blank = () => Array(N).fill(null);
+    const line = (label, color, axis, fill) => ({
+      label, data: blank(), yAxisID: axis, borderColor: color, backgroundColor: color + '22',
+      fill, tension: 0.35, pointRadius: 0, borderWidth: 2, spanGaps: true
+    });
+    const ch = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: Array(N).fill(''),
+        datasets: [line('En la cola', '#fb923c', 'y', true), line('Entran /s', '#7dd3fc', 'y1', false), line('Salen /s', '#4ade80', 'y1', false)]
+      },
+      options: {
+        animation: false, responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#cbd5e1', boxWidth: 10, boxHeight: 10, font: { size: 12 } } } },
+        scales: {
+          x: { display: false },
+          y: { position: 'left', min: 0, suggestedMax: 10, ticks: { color: '#fb923c', font: { size: 11 }, precision: 0 }, grid: { color: 'rgba(148,163,184,.12)' } },
+          y1: { position: 'right', min: 0, suggestedMax: 4, ticks: { color: '#94a3b8', font: { size: 11 } }, grid: { display: false } }
+        }
+      }
+    });
+    const [q, inn, out] = ch.data.datasets;
+    throttle(sim, 0.5, isReset => {
+      if (isReset) { q.data = blank(); inn.data = blank(); out.data = blank(); ch.update('none'); return; }
+      const w = sim.window(2);
+      q.data.push(w.queueLen); q.data.shift();
+      inn.data.push(w.inRate); inn.data.shift();
+      out.data.push(w.outRate); out.data.shift();
+      ch.update('none');
+    });
+    return ch;
+  }
+
+  window.Widgets = { stats, chart, histogram, strip, fmtLat, mstats, qchart };
 })();

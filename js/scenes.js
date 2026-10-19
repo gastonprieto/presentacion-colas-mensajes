@@ -95,5 +95,52 @@
     return life(sim);
   };
 
+  /* ---------- 4. picos: la cola absorbe; sin cola, 503 ---------- */
+
+  S.peak = slide => {
+    const opts = mode => ({ mode, rate: 1, workers: 2, slots: 2, workTime: 0.8, seed: 4 });
+    const sim = msetup(slide, opts('queue'));
+    let mode = 'queue';
+    showMode(slide, mode);
+    seg(slide, 'mode', v => { mode = v; showMode(slide, v); sim.reset(opts(v)); });
+    on(slide, '[data-act=burst]', () => sim.burst(30, 3));
+    on(slide, '[data-act=reset]', () => sim.reset(opts(mode)));
+    return life(sim);
+  };
+
+  /* ---------- 5. más workers: consumidores iguales que compiten ---------- */
+
+  S.workers = slide => {
+    const base = { mode: 'queue', rate: 4, workers: 1, workTime: 1, seed: 5 };
+    const sim = msetup(slide, base);
+    const cap = slide.querySelector('.cap-out');
+    const sync = () => {
+      const n = sim.o.workers, c = n / sim.o.workTime;
+      cap.innerHTML = `<b>${n}</b> worker${n > 1 ? 's' : ''} · procesan ≈ <b>${c}</b>/s · llegan <b>${sim.o.rate}</b>/s → la cola ${c > sim.o.rate ? 'se vacía' : c === sim.o.rate ? 'se mantiene' : 'crece'}`;
+    };
+    on(slide, '[data-act=add]', () => { sim.addWorker(); sync(); });
+    on(slide, '[data-act=remove]', () => { sim.removeWorker(); sync(); });
+    on(slide, '[data-act=reset]', () => { sim.reset(base); sync(); });
+    sync();
+    return life(sim);
+  };
+
+  /* ---------- 6. desacople: apagar los workers no afecta a la app ---------- */
+
+  S.decouple = slide => {
+    const base = { mode: 'queue', rate: 2, workers: 2, workTime: 0.6, seed: 6, clickWorkers: true };
+    const sim = msetup(slide, base);
+    const btn = slide.querySelector('[data-act=toggle]');
+    const label = () => {
+      const anyUp = sim.workers.some(w => !w.off);
+      btn.textContent = anyUp ? '⏻ Apagar workers' : '⏻ Prender workers';
+      return anyUp;
+    };
+    on(slide, '[data-act=toggle]', () => { sim.setWorkersUp(!label()); label(); });
+    on(slide, '[data-act=reset]', () => { sim.reset(base); label(); });
+    sim.svg.addEventListener('click', () => setTimeout(label));
+    return life(sim);
+  };
+
   window.Scenes = S;
 })();

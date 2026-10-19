@@ -99,6 +99,100 @@
   </aside>
 </section>
 
+<!-- ============ 4. PICOS ============ -->
+<section data-scene="peak">
+  <div class="kicker">Amortiguar carga</div>
+  <h2>La cola absorbe los picos</h2>
+  <div class="demo">
+    <div class="stage">
+      <svg class="sim"></svg>
+      <div class="hint">⚡ tocá "Pico": llegan 30 pedidos de golpe</div>
+    </div>
+    <div class="panel">
+      <p class="lead">Los workers trabajan <b>a su ritmo</b>, llegue como llegue la carga. Lo que sobra espera en la cola.</p>
+      <div class="seg" data-group="mode">
+        <button data-v="sync">Sin cola</button>
+        <button data-v="queue" class="active">Con cola</button>
+      </div>
+      <p class="mode-text" data-mode="sync">Sin cola, todo lo que no entra en el momento se rechaza.</p>
+      <p class="mode-text" data-mode="queue">Con cola, el pico se guarda y se procesa después.</p>
+      <div class="actions">
+        <button class="btn primary" data-act="burst">⚡ Pico</button>
+        <button class="btn ghost" data-act="reset">↺</button>
+      </div>
+      <div class="chart-box" style="height:140px"><canvas class="qchart"></canvas></div>
+      <div class="mstats" data-fields="queueLen,rejected,doneP95"></div>
+    </div>
+  </div>
+  <aside class="notes">
+    Con cola: tocar "Pico" y mirar el gráfico. La línea naranja (mensajes en la cola) sube de golpe y baja de a poco, mientras la verde (procesados por segundo) se mantiene pareja: los workers no se enteran del pico.
+    Cambiar a "Sin cola" y repetir: el mismo pico se convierte en una lluvia de 503.
+    Pregunta para la clase: ¿qué tipo de tráfico tiene picos así? (fin de mes, Black Friday, un import masivo)
+  </aside>
+</section>
+
+<!-- ============ 5. MÁS WORKERS ============ -->
+<section data-scene="workers">
+  <div class="kicker">Escalar consumidores</div>
+  <h2>Más workers, la cola baja más rápido</h2>
+  <div class="demo">
+    <div class="stage">
+      <svg class="sim"></svg>
+      <div class="legend"><span><i style="background:#fb923c"></i>en la cola</span><span><i style="background:#7dd3fc"></i>tomado por un worker</span></div>
+    </div>
+    <div class="panel">
+      <p class="lead">Llegan 4 mensajes por segundo y un worker procesa 1. Sumá workers hasta que la cola deje de crecer.</p>
+      <div class="actions">
+        <button class="btn primary" data-act="add">＋ Worker</button>
+        <button class="btn" data-act="remove">－ Worker</button>
+        <button class="btn ghost" data-act="reset">↺</button>
+      </div>
+      <div class="box"><span class="cap-out" style="font-size:14px"></span></div>
+      <div class="mstats" data-fields="queueLen,done,doneP95"></div>
+      <ul class="points">
+        <li class="fragment">Cada mensaje lo toma <b>uno solo</b> de los workers.</li>
+        <li class="fragment">Los workers son <b>homogéneos</b>: copias iguales que compiten por los mensajes.</li>
+        <li class="fragment">Se escalan sin tocar al que produce los mensajes.</li>
+      </ul>
+    </div>
+  </div>
+  <aside class="notes">
+    Con 1 worker la cola crece sin parar. Agregar de a uno: con 4 la cola se estabiliza y con 5 o 6 se vacía.
+    Remarcar la palabra "homogéneos": todos los workers hacen lo mismo y da igual cuál toma cada mensaje. La vamos a retomar en la clase de eventos, donde los consumidores son distintos entre sí.
+    Pregunta para la clase: ¿se parece a algo que vimos con load balancing? ¿Qué cambia?
+  </aside>
+</section>
+
+<!-- ============ 6. DESACOPLE ============ -->
+<section data-scene="decouple">
+  <div class="kicker purple">Comunicar componentes</div>
+  <h2>El que produce no depende del que consume</h2>
+  <div class="demo">
+    <div class="stage">
+      <svg class="sim"></svg>
+      <div class="hint">👆 apagá los workers: la app ni se entera</div>
+    </div>
+    <div class="panel">
+      <p class="lead">La app y los workers <b>no se conocen</b> y no necesitan estar levantados al mismo tiempo. Lo único que comparten es la cola.</p>
+      <div class="actions">
+        <button class="btn primary" data-act="toggle">⏻ Apagar workers</button>
+        <button class="btn ghost" data-act="reset">↺</button>
+      </div>
+      <div class="mstats" data-fields="sent,done,queueLen"></div>
+      <ul class="points">
+        <li class="fragment">Con los workers caídos, los mensajes <b>se acumulan</b>, no se pierden.</li>
+        <li class="fragment">Cuando vuelven, se ponen al día solos.</li>
+        <li class="fragment">Se puede cambiar, redesplegar o reemplazar un lado sin tocar el otro.</li>
+      </ul>
+    </div>
+  </div>
+  <aside class="notes">
+    Apagar los workers (botón o clic en cada uno): la app sigue enviando y "Enviados" sigue subiendo; "Terminados" se congela y la cola crece.
+    Prenderlos: la cola se vacía y los números cierran, sin perder ningún mensaje.
+    Pregunta para la clase: si la app llamara al servicio directo, ¿qué le pasaría al usuario con el servicio caído?
+  </aside>
+</section>
+
 </div>
 </div>
 

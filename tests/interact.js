@@ -229,6 +229,74 @@ test('escena: stop/start no genera ráfaga', async page => {
   check(after - before <= 2, `ráfaga: ${before} → ${after}`);
 });
 
+test('escena: pico se absorbe', async page => {
+  await open(page);
+  const r = await evalScene(page, SL.peak, sec => {
+    const sim = sec._scene.sim;
+    sec.querySelector('[data-act=burst]').click();
+    sim.fastForward(5);
+    const mid = sim.window(5);
+    sim.fastForward(40);
+    return { mode: sim.o.mode, mid, end: sim.window(5) };
+  });
+  check(r.mode === 'queue', `mode=${r.mode}`);
+  check(r.mid.queueLen >= 15, `queueLen en el pico=${r.mid.queueLen}`);
+  check(r.mid.rejected === 0, `rejected=${r.mid.rejected}`);
+  check(r.end.queueLen <= 3, `queueLen final=${r.end.queueLen}`);
+});
+
+test('escena: pico sin cola rechaza', async page => {
+  await open(page);
+  const r = await evalScene(page, SL.peak, sec => {
+    sec.querySelector('.seg[data-group=mode] button[data-v=sync]').click();
+    const sim = sec._scene.sim;
+    sec.querySelector('[data-act=burst]').click();
+    sim.fastForward(5);
+    return { mode: sim.o.mode, rejected: sim.window(5).rejected };
+  });
+  check(r.mode === 'sync', `mode=${r.mode}`);
+  check(r.rejected >= 10, `rejected=${r.rejected}`);
+});
+
+test('escena: qchart existe y tiene datos', async page => {
+  await open(page);
+  await goto(page, SL.peak);
+  await sleep(3000);
+  const n = await page.evaluate(i => {
+    const ch = Chart.getChart(window.__sec(i).querySelector('canvas.qchart'));
+    return ch ? ch.data.datasets[0].data.filter(v => v != null).length : -1;
+  }, SL.peak);
+  check(n > 0, `puntos en el gráfico=${n}`);
+});
+
+test('escena: ＋ worker', async page => {
+  await open(page);
+  const r = await evalScene(page, SL.workers, sec => {
+    for (let i = 0; i < 3; i++) sec.querySelector('[data-act=add]').click();
+    return { workers: sec._scene.sim.o.workers, text: sec.querySelector('.cap-out').textContent };
+  });
+  check(r.workers === 4, `workers=${r.workers}`);
+  check(r.text.includes('4'), `texto de capacidad: ${r.text}`);
+});
+
+test('escena: apagar no pierde', async page => {
+  await open(page);
+  const r = await evalScene(page, SL.decouple, (sec, INV) => {
+    const sim = sec._scene.sim;
+    const btn = sec.querySelector('[data-act=toggle]');
+    btn.click();
+    sim.fastForward(10);
+    const off = sim.window(5);
+    btn.click();
+    sim.fastForward(30);
+    const w = sim.window(5);
+    return { off, w, inv: eval(INV)(w) };
+  }, INV);
+  check(r.off.queueLen >= 10, `queueLen apagado=${r.off.queueLen}`);
+  check(r.w.queueLen <= 1, `queueLen final=${r.w.queueLen}`);
+  check(r.inv, `invariante: ${JSON.stringify(r.w)}`);
+});
+
 /* ---------- runner ---------- */
 
 (async () => {
