@@ -152,7 +152,7 @@
           hw = Math.min(64, W / m / 2 - 5); hh = 28;
           x = W * (i + 0.5) / m; y = 330;
         } else {
-          const gap = Math.min(96, (H - 40) / m);
+          const gap = Math.min(96, (H - 130) / m);
           hw = 82; hh = Math.min(28, gap / 2 - 5);
           x = 760; y = H / 2 + (i - (m - 1) / 2) * gap;
         }
