@@ -347,3 +347,17 @@ html.mobile .speed-ctl button { font-size: 16px; padding: 5px 7px; }
 html.mobile .speed-ctl span { min-width: 34px; }
 
 [hidden] { display: none !important; }
+
+/* ---------- motor de mensajería (js/msg.js) ---------- */
+.msgsim .prod .node-box { stroke: #7dd3fc; fill: #0f1d36; }
+.msgsim .queue .node-box { fill: #26170b; stroke: var(--orange); stroke-dasharray: 7 5; }
+.msgsim .queue .node-box.full { stroke-dasharray: none; stroke-width: 3; }
+.msgsim .queue .t-title { fill: #fdba74; }
+.msgsim .queue .t-info { fill: #fdba74; }
+.msgsim .dlq .node-box { fill: #2a0f14; stroke: var(--red); }
+.msgsim .dlq .t-info { fill: #fca5a5; }
+.msgsim .slot { fill: #0a1626; stroke: #24476b; stroke-width: 1.5; }
+.msgsim .slot.busy { fill: #13324f; stroke: var(--cyan); }
+.msgsim .worker.down .node-box { fill: #3a1018; stroke: var(--red); }
+.msgsim .worker.down .t-sub { fill: var(--red); font-weight: 700; }
+.msgsim .msg.q { stroke: rgba(10, 15, 31, .9); stroke-width: 1.5; }
