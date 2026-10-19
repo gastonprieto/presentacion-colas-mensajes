@@ -116,7 +116,7 @@
     const cap = slide.querySelector('.cap-out');
     const sync = () => {
       const n = sim.o.workers, c = n / sim.o.workTime;
-      cap.innerHTML = `<b>${n}</b> worker${n > 1 ? 's' : ''} · procesan ≈ <b>${c}</b>/s · llegan <b>${sim.o.rate}</b>/s → la cola ${c > sim.o.rate ? 'se vacía' : c === sim.o.rate ? 'se mantiene' : 'crece'}`;
+      cap.innerHTML = `<b>${n}</b> worker${n > 1 ? 's' : ''} · procesan ≈ <b>${c}</b>/s · llegan <b>${sim.o.rate}</b>/s → la cola ${c > sim.o.rate ? 'se vacía' : c === sim.o.rate ? 'apenas alcanza' : 'crece'}`;
     };
     on(slide, '[data-act=add]', () => { sim.addWorker(); sync(); });
     on(slide, '[data-act=remove]', () => { sim.removeWorker(); sync(); });

@@ -314,8 +314,9 @@
         w.busy = null;
         this._pop(w, '💥 sin ack', C.err);
         this.flying.delete(m);
-        this._enqueue(m, true);
+        // primero se cae: así la cola le da el mensaje a otro worker
         this._down(w, 1.5);
+        this._enqueue(m, true);
         return;
       }
       w.busy = null;
@@ -484,7 +485,9 @@
       w.sub.setAttribute('text-anchor', narrow ? 'middle' : 'start');
       const i = this.workers.indexOf(w) + 1;
       w.title.textContent = narrow ? `W${i}` : `${this.o.labels.worker} ${i}`;
-      w.sub.textContent = !w.up ? (w.crashed ? 'caído' : 'apagado') : w.busy ? 'procesando' : narrow ? `✓ ${w.n}` : `libre · ✓ ${w.n}`;
+      const tiny = w.hw < 45;
+      w.sub.textContent = tiny ? (!w.up ? '✗' : w.busy ? '⏳' : `✓${w.n}`)
+        : !w.up ? (w.crashed ? 'caído' : 'apagado') : w.busy ? 'procesando' : narrow ? `✓ ${w.n}` : `libre · ✓ ${w.n}`;
       const bw = w.hw * 2 - 20;
       w.barBg.setAttribute('x', -w.hw + 10); w.barBg.setAttribute('y', w.hh - 9); w.barBg.setAttribute('width', bw);
       w.bar.setAttribute('x', -w.hw + 10); w.bar.setAttribute('y', w.hh - 9);

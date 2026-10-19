@@ -334,6 +334,46 @@ test('notas: todas las slides tienen aside.notes con pregunta', async page => {
   check(!bad.length, `slides sin notas con pregunta: ${bad}`);
 });
 
+test('msg: tras el crash el mensaje no vuelve al worker caído', async page => {
+  await open(page);
+  const r = await engine(page, svg => {
+    const s = new MsgKit.MsgSim(svg, { mode: 'queue', rate: 1.5, workers: 2, workTime: 1, seed: 1 });
+    s.fastForward(2);
+    s.crashBeforeAck();
+    let crashed = null;
+    for (let i = 0; i < 200 && !crashed; i++) { s.fastForward(0.05); crashed = s.workers.find(w => w.crashed); }
+    if (!crashed) return { found: false };
+    const busyAtCrash = !!crashed.busy;
+    s.fastForward(0.3);
+    return { found: true, busyAtCrash, busyLater: !!crashed.busy };
+  });
+  check(r.found, 'no hubo crash');
+  check(!r.busyAtCrash && !r.busyLater, `el worker caído recibió el mensaje: ${JSON.stringify(r)}`);
+});
+
+test('mobile: con 6 workers los textos entran en las cajas', async page => {
+  await open(page, 0, true);
+  const r = await page.evaluate(async i => {
+    const sec = window.__sec(i);
+    sec.scrollIntoView();
+    for (let k = 0; k < 40 && !sec._scene; k++) await new Promise(r => setTimeout(r, 100));
+    for (let k = 0; k < 5; k++) sec.querySelector('[data-act=add]').click();
+    const sim = sec._scene.sim;
+    sim.fastForward(3);
+    sim._frame();
+    return sim.workers.map(w => ({ box: w.hw * 2, title: w.title.getBBox().width, sub: w.sub.getBBox().width }));
+  }, SL.workers);
+  check(r.length === 6, `workers=${r.length}`);
+  const bad = r.filter(x => x.title > x.box - 4 || x.sub > x.box - 4);
+  check(!bad.length, `textos que no entran: ${JSON.stringify(bad)}`);
+});
+
+test('notas: la slide 5 no dice que con 4 workers se estabiliza', async page => {
+  await open(page);
+  const t = await page.evaluate(i => window.__sec(i).querySelector('aside.notes').textContent, SL.workers);
+  check(!t.includes('con 4 la cola se estabiliza'), 'la nota sigue diciendo que con 4 se estabiliza');
+});
+
 /* ---------- runner ---------- */
 
 (async () => {
