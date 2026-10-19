@@ -31,8 +31,9 @@
     <p class="keys-mobile">Deslizá hacia abajo para recorrerla. Las simulaciones se activan al llegar a cada una.</p>
   </div>
   <aside class="notes">
-    Guion de la bienvenida: objetivo de la clase y cómo se lee la presentación.
-    Pregunta para la clase: …
+    Bienvenida. Ya vimos cómo repartir pedidos entre servidores con un load balancer; hoy vemos otra forma de comunicar componentes: dejar un mensaje y no esperar la respuesta.
+    Objetivo: entender por qué existe el asincronismo, cómo una cola amortigua picos de carga y qué se complica.
+    Pregunta para la clase: ¿qué cosas de las apps que usan todos los días pasan "en segundo plano"?
   </aside>
 </section>
 
@@ -190,6 +191,92 @@
     Apagar los workers (botón o clic en cada uno): la app sigue enviando y "Enviados" sigue subiendo; "Terminados" se congela y la cola crece.
     Prenderlos: la cola se vacía y los números cierran, sin perder ningún mensaje.
     Pregunta para la clase: si la app llamara al servicio directo, ¿qué le pasaría al usuario con el servicio caído?
+  </aside>
+</section>
+
+<!-- ============ 7. CUÁNDO SÍ Y CUÁNDO NO ============ -->
+<section>
+  <div class="kicker purple">Criterio</div>
+  <h2>¿Cuándo conviene una cola?</h2>
+  <div class="compare">
+    <div class="layer-card l4 good-top">
+      <h3>✅ Sí <small>no hace falta la respuesta ya</small></h3>
+      <ul>
+        <li class="fragment">Mandar mails y notificaciones</li>
+        <li class="fragment">Generar reportes y PDFs</li>
+        <li class="fragment">Procesar imágenes o videos</li>
+        <li class="fragment">Sincronizar stock con otros sistemas</li>
+        <li class="fragment">Integrarse con terceros lentos o inestables</li>
+      </ul>
+      <div class="ex">Alcanza con "recibido, te aviso cuando esté".</div>
+    </div>
+    <div class="layer-card l7 bad-top">
+      <h3>⛔ No <small>el usuario necesita la respuesta</small></h3>
+      <ul>
+        <li class="fragment">Iniciar sesión</li>
+        <li class="fragment">Consultar el saldo o el stock en pantalla</li>
+        <li class="fragment">Validar el pago antes de confirmar la compra</li>
+        <li class="fragment">Cualquier cosa sin la cual el usuario no puede seguir</li>
+      </ul>
+      <div class="ex">Ahí la cola solo agrega demora y piezas.</div>
+    </div>
+  </div>
+  <aside class="notes">
+    Repasar los ejemplos de cada lado y pedir a la clase que propongan otros.
+    La pregunta que decide es: ¿el que pide puede seguir sin el resultado?
+    Pregunta para la clase: en un e-commerce, ¿qué partes de "confirmar una compra" pueden ir por una cola y cuáles no?
+  </aside>
+</section>
+
+<!-- ============ 8. LO QUE SE COMPLICA ============ -->
+<section data-scene="failures">
+  <div class="kicker red">Lo que se complica</div>
+  <h2>Fallas que hay que tener en cuenta</h2>
+  <div class="demo">
+    <div class="stage">
+      <svg class="sim"></svg>
+      <div class="legend"><span><i style="background:#facc15"></i>reentregado</span><span><i style="background:#f87171"></i>siempre falla</span><span><i style="background:#fb923c"></i>en la cola</span></div>
+    </div>
+    <div class="panel">
+      <p class="lead">Romperlo en vivo: un worker se cae justo antes de <b>confirmar</b> (ack), o llega un mensaje que <b>siempre falla</b>.</p>
+      <div class="actions">
+        <button class="btn primary" data-act="crash">💥 Cae antes del ack</button>
+        <button class="btn" data-act="poison">☠ Mensaje roto</button>
+        <button class="btn ghost" data-act="reset">↺</button>
+      </div>
+      <div class="mstats" data-fields="done,dup,dlq"></div>
+      <ul class="points">
+        <li class="fragment"><b>Duplicados</b>: el trabajo se hizo, pero sin ack el mensaje vuelve. Procesar dos veces tiene que dar lo mismo (<b>idempotencia</b>).</li>
+        <li class="fragment"><b>DLQ</b>: después de N reintentos, el mensaje se aparta para revisarlo.</li>
+        <li class="fragment">El <b>orden</b> no está garantizado, y una cola sin límite puede crecer sin control.</li>
+      </ul>
+    </div>
+  </div>
+  <aside class="notes">
+    "Cae antes del ack": el worker terminó el trabajo (por ejemplo, mandó el mail) pero se cayó antes de avisarle a la cola. La cola no sabe que terminó y se lo da a otro: el mail sale dos veces.
+    "Mensaje roto": falla siempre; se reintenta 3 veces y termina en la cola de mensajes muertos (DLQ) para que alguien lo mire.
+    Pregunta para la clase: ¿cómo harían para que mandar el mail dos veces no sea un problema?
+  </aside>
+</section>
+
+<!-- ============ 9. RESUMEN ============ -->
+<section>
+  <div class="kicker">Resumen</div>
+  <h2>Colas de mensajes: lo que nos llevamos</h2>
+  <div class="summary">
+    <div class="card good fragment"><div class="ico">🔌</div><h4>Desacople</h4><p>El que produce y el que consume no se conocen ni tienen que estar levantados a la vez.</p></div>
+    <div class="card good fragment"><div class="ico">🌊</div><h4>Absorbe picos</h4><p>Los workers trabajan a su ritmo; lo que sobra espera en la cola en vez de rechazarse.</p></div>
+    <div class="card good fragment"><div class="ico">📈</div><h4>Escala por separado</h4><p>Más workers sin tocar al productor. Si uno se cae, el mensaje vuelve a la cola.</p></div>
+    <div class="card bad fragment"><div class="ico">⏳</div><h4>Respuesta diferida</h4><p>El resultado llega después. No sirve cuando el usuario lo necesita para seguir.</p></div>
+    <div class="card bad fragment"><div class="ico">🧩</div><h4>Más piezas</h4><p>Una cola para operar y monitorear; seguir qué pasó con un mensaje cuesta más.</p></div>
+    <div class="card bad fragment"><div class="ico">🔁</div><h4>Duplicados y orden</h4><p>Hay que procesar de forma idempotente, tener DLQ y vigilar que la cola no crezca sin control.</p></div>
+  </div>
+  <p class="products">En la práctica: RabbitMQ · Amazon SQS · Azure Service Bus / Storage Queues · Redis</p>
+  <aside class="notes">
+    Repasar cada tarjeta conectándola con su demo: picos (slide 4), workers (5), desacople (6), fallas (8).
+    Cerrar con la idea central: una cola sirve cuando el que pide puede seguir sin esperar el resultado.
+    Los productos van como referencia: todos implementan la misma idea con distintos detalles.
+    Pregunta para la clase: ¿qué pasaría si en vez de un tipo de worker hubiera varios servicios distintos interesados en el mismo mensaje? (puente a la clase de eventos)
   </aside>
 </section>
 

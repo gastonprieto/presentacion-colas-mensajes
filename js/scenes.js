@@ -58,11 +58,11 @@
   const fmtRate = r => `${String(r).replace('.', ',')} /s`;
   const FACTURA = { producer: 'App', producerSub: 'pide la factura', service: 'Facturación', serviceSub: 'genera el PDF · 1,5 s', worker: 'Worker' };
 
-  /* ---------- 1. portada: simulación decorativa de fondo ---------- */
+  /* ---------- 1. portada: cola decorativa de fondo ---------- */
 
   S.title = slide => {
-    const sim = new Sim(slide.querySelector('svg.bg'), {
-      clients: 3, servers: 4, rate: 5, colorByClient: true, showHandled: false, serviceTime: 0.6
+    const sim = new MsgKit.MsgSim(slide.querySelector('svg.bg'), {
+      mode: 'queue', rate: 2.5, workers: 3, workTime: 1, seed: 11, pops: false
     });
     return life(sim);
   };
@@ -139,6 +139,17 @@
     on(slide, '[data-act=toggle]', () => { sim.setWorkersUp(!label()); label(); });
     on(slide, '[data-act=reset]', () => { sim.reset(base); label(); });
     sim.svg.addEventListener('click', () => setTimeout(label));
+    return life(sim);
+  };
+
+  /* ---------- 8. fallas: duplicado sin ack y mensaje que siempre falla → DLQ ---------- */
+
+  S.failures = slide => {
+    const base = { mode: 'queue', rate: 1.5, workers: 2, workTime: 1, maxRetries: 3, seed: 8 };
+    const sim = msetup(slide, base);
+    on(slide, '[data-act=crash]', () => sim.crashBeforeAck());
+    on(slide, '[data-act=poison]', () => sim.sendPoison());
+    on(slide, '[data-act=reset]', () => sim.reset(base));
     return life(sim);
   };
 

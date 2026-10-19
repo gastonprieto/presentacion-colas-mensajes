@@ -297,6 +297,43 @@ test('escena: apagar no pierde', async page => {
   check(r.inv, `invariante: ${JSON.stringify(r.w)}`);
 });
 
+test('escena: crash duplica', async page => {
+  await open(page);
+  const dup = await evalScene(page, SL.failures, sec => {
+    sec.querySelector('[data-act=crash]').click();
+    sec._scene.sim.fastForward(8);
+    return sec._scene.sim.window(5).dup;
+  });
+  check(dup === 1, `dup=${dup}`);
+});
+
+test('escena: poison a DLQ', async page => {
+  await open(page);
+  const r = await evalScene(page, SL.failures, sec => {
+    sec.querySelector('[data-act=poison]').click();
+    const sim = sec._scene.sim;
+    sim.fastForward(20);
+    return { dlq: sim.window(5).dlq, visible: sim.dlqN.g.style.display !== 'none' };
+  });
+  check(r.dlq === 1, `dlq=${r.dlq}`);
+  check(r.visible, 'la caja DLQ no se ve');
+});
+
+test('estática: resumen nombra productos', async page => {
+  await open(page);
+  const t = await page.evaluate(i => window.__sec(i).textContent, SL.summary);
+  check(t.includes('RabbitMQ') && t.includes('SQS'), 'faltan RabbitMQ / SQS en el resumen');
+});
+
+test('notas: todas las slides tienen aside.notes con pregunta', async page => {
+  await open(page);
+  const r = await page.evaluate(() => [...document.querySelectorAll('.reveal .slides > section')]
+    .map((s, i) => ({ i: i + 1, ok: !!s.querySelector('aside.notes') && s.querySelector('aside.notes').textContent.includes('?') })));
+  check(r.length === 9, `slides=${r.length}`);
+  const bad = r.filter(x => !x.ok).map(x => x.i);
+  check(!bad.length, `slides sin notas con pregunta: ${bad}`);
+});
+
 /* ---------- runner ---------- */
 
 (async () => {
