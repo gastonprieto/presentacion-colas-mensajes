@@ -58,12 +58,15 @@
       <ul class="points">
         <li class="fragment">Cada pedido ocupa un lugar durante <b>todo</b> el trabajo.</li>
         <li class="fragment">Si llegan más de los que entran: <b>503</b>, como vimos con load balancing.</li>
+        <li class="fragment">Aunque <b>en promedio</b> alcance, los pedidos llegan de a ráfagas: sin lugar donde esperar, el pico rebota.</li>
       </ul>
     </div>
   </div>
   <aside class="notes">
-    Arrancar con 2 pedidos por segundo: el servicio da abasto (3 lugares, 1,5 s cada trabajo → 2 por segundo).
-    Subir el slider a 4 o más: se llenan los lugares y aparecen los 503.
+    Arrancar con 2 pedidos por segundo: en promedio el servicio da justo (3 lugares, 1,5 s cada trabajo → 2 por segundo).
+    Pero mirar el contador de 503: rebota más o menos 1 de cada 3. Los pedidos no llegan parejos; cuando se juntan 4 a la vez, el cuarto no tiene dónde esperar.
+    Pregunta para la clase: ¿cómo puede rebotar si en promedio alcanza? Lo que falta es un lugar donde esperar: la cola (próxima slide).
+    Bajar el slider a 1: igual rebota alguno (~13 %). Subirlo a 4 o más: rebota más de la mitad.
     Remarcar que el usuario está mirando un spinner durante todo el trabajo, aunque no necesite el PDF en ese momento.
     Pregunta para la clase: ¿qué hace el usuario mientras se genera el PDF? ¿Lo necesita ya?
   </aside>

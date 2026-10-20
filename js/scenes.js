@@ -75,9 +75,13 @@
     const range = slide.querySelector('input[type=range]');
     const out = slide.querySelector('.rate-out'), cap = slide.querySelector('.cap-out');
     const sync = () => {
-      const r = +range.value, c = sim.o.slots / sim.o.workTime;
+      const r = +range.value, n = sim.o.slots, c = n / sim.o.workTime;
+      const num = x => String(x).replace('.', ',');
       out.textContent = fmtRate(r);
-      cap.innerHTML = `capacidad ≈ <b>${String(c).replace('.', ',')}</b> pedidos/s · ${r > c ? '<b style="color:#f87171">se satura</b>' : 'da abasto'}`;
+      const state = r < c ? 'en promedio alcanza… pero si se juntan, <b class="neck">rebotan</b>'
+        : r === c ? 'justo al límite: cada pico <b class="neck">rebota</b>'
+        : '<b class="neck">se satura</b>: rebota todo lo que sobra';
+      cap.innerHTML = `${n} lugares, ${num(sim.o.workTime)} s c/u → <b>${num(c)}</b> pedidos/s<br>${state}`;
     };
     range.addEventListener('input', () => { sim.setRate(+range.value); sync(); });
     on(slide, '[data-act=reset]', () => { range.value = 2; sim.reset(base); sync(); });
