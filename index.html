@@ -84,11 +84,16 @@
     <div class="panel">
       <p class="lead">Mismo trabajo, misma carga. Con una cola, la app <b>deja el mensaje y sigue</b>: un worker lo procesa cuando puede.</p>
       <div class="seg" data-group="mode">
-        <button data-v="sync" class="active">Sincrónico</button>
-        <button data-v="queue">Con cola</button>
+        <button data-v="sync">Sincrónico</button>
+        <button data-v="queue" class="active">Con cola</button>
       </div>
       <p class="mode-text" data-mode="sync">El usuario espera todo el trabajo, y si no hay lugar recibe un 503.</p>
-      <p class="mode-text" data-mode="queue">La respuesta es inmediata: <b>202 Aceptado</b>. El trabajo se hace después.</p>
+      <p class="mode-text" data-mode="queue">La respuesta es inmediata: <b>202 Aceptado</b>. El trabajo lo hace un <b>worker</b> después… si hay alguno.</p>
+      <div class="actions" data-mode="queue">
+        <button class="btn primary" data-act="add">＋ Worker</button>
+        <button class="btn ghost" data-act="reset">↺</button>
+        <span class="cap-out"></span>
+      </div>
       <div class="mstats" data-fields="respP95,doneP95,rejected"></div>
       <ul class="points">
         <li class="fragment">La cola baja el tiempo de <b>respuesta</b>…</li>
@@ -97,8 +102,9 @@
     </div>
   </div>
   <aside class="notes">
-    Mostrar primero el modo sincrónico: respuesta lenta y 503.
-    Cambiar a "Con cola": la respuesta pasa a ser inmediata y desaparecen los 503, pero el tiempo hasta terminar no mejora (crece si llegan más de los que se procesan).
+    Arranca "Con cola" y con 0 workers: la app recibe 202 al instante y no hay 503, pero los mensajes se acumulan y nadie los procesa. La cola sola no hace el trabajo.
+    Agregar workers con "＋ Worker": recién ahí empiezan a salir terminados. Aun con varios, el tiempo hasta terminar crece si llegan más de los que se procesan (escalar workers lo vemos en la slide 5).
+    Cambiar a "Sincrónico" para comparar con la misma carga: respuesta lenta y 503.
     Pregunta para la clase: ¿en qué casos le alcanza al usuario con un "recibido, te aviso"?
   </aside>
 </section>

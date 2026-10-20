@@ -92,10 +92,21 @@
   /* ---------- 3. asincrónico: misma carga, sincrónico vs. con cola ---------- */
 
   S.async = slide => {
-    const opts = mode => ({ mode, rate: 4, slots: 3, workers: 2, workTime: 1.5, seed: 3, labels: FACTURA });
-    const sim = msetup(slide, opts('sync'));
-    showMode(slide, 'sync');
-    seg(slide, 'mode', v => { showMode(slide, v); sim.reset(opts(v)); });
+    const opts = mode => ({ mode, rate: 4, slots: 3, workers: 0, workTime: 1.5, seed: 3, labels: FACTURA });
+    let mode = 'queue';
+    const sim = msetup(slide, opts(mode));
+    const cap = slide.querySelector('.cap-out');
+    const sync = () => {
+      const n = sim.o.workers, c = Math.round(n / sim.o.workTime * 10) / 10;
+      cap.innerHTML = n
+        ? `<b>${n}</b> worker${n > 1 ? 's' : ''} · procesan ≈ <b>${String(c).replace('.', ',')}</b>/s · llegan <b>${sim.o.rate}</b>/s`
+        : `<b class="neck">0 workers</b>: los mensajes se acumulan y nadie los procesa`;
+    };
+    showMode(slide, mode);
+    seg(slide, 'mode', v => { mode = v; showMode(slide, v); sim.reset(opts(v)); sync(); });
+    on(slide, '[data-act=add]', () => { sim.addWorker(); sync(); });
+    on(slide, '[data-act=reset]', () => { sim.reset(opts(mode)); sync(); });
+    sync();
     return life(sim);
   };
 
