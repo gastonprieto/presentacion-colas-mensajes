@@ -1,0 +1,38 @@
+# Laboratorio de colas de mensajes: una app que encola facturas en RabbitMQ y
+# workers iguales que las procesan. Instrucciones en el README ("Laboratorio con Docker").
+name: lab-colas-mensajes
+
+x-node: &node
+  build: ./lab/app
+  image: lab-colas-mensajes-app
+  restart: unless-stopped
+  environment:
+    WORK_MS: 1500   # lo que tarda generar una factura
+  depends_on:
+    rabbit: { condition: service_healthy }
+
+services:
+  rabbit:
+    image: rabbitmq:4.1-management-alpine
+    hostname: rabbit   # fijo, para que los mensajes guardados sobrevivan a recrear el contenedor
+    environment:
+      RABBITMQ_DEFAULT_USER: tienda
+      RABBITMQ_DEFAULT_PASS: tienda
+    ports: ["15672:15672"]   # panel: http://localhost:15672 (tienda / tienda)
+    volumes: ["rabbit:/var/lib/rabbitmq"]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 3s
+      retries: 30
+
+  app:
+    <<: *node
+    ports: ["8080:3000"]
+
+  worker:
+    <<: *node
+    command: ["node", "worker.js"]
+    deploy: { replicas: 1 }   # docker compose up -d --scale worker=4
+
+volumes:
+  rabbit:
