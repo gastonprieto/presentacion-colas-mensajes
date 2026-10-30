@@ -329,7 +329,7 @@ test('notas: todas las slides tienen aside.notes con pregunta', async page => {
   await open(page);
   const r = await page.evaluate(() => [...document.querySelectorAll('.reveal .slides > section')]
     .map((s, i) => ({ i: i + 1, ok: !!s.querySelector('aside.notes') && s.querySelector('aside.notes').textContent.includes('?') })));
-  check(r.length === 9, `slides=${r.length}`);
+  check(r.length === 10, `slides=${r.length}`);
   const bad = r.filter(x => !x.ok).map(x => x.i);
   check(!bad.length, `slides sin notas con pregunta: ${bad}`);
 });
