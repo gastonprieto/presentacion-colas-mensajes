@@ -365,3 +365,12 @@ html.mobile .speed-ctl span { min-width: 34px; }
 .layer-card.bad-top { border-top-color: var(--red); }
 .products { margin-top: 14px; font: 13px var(--mono); color: var(--muted); text-align: center; }
 html.mobile .products { font-size: 12px; text-align: left; }
+
+/* Link al repo en la diapositiva final (icono de GitHub) */
+.repo-link {
+  position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%);
+  display: inline-flex; color: var(--muted); opacity: .75; transition: opacity .2s, color .2s;
+}
+.repo-link:hover { opacity: 1; color: var(--text); }
+.repo-link svg { width: 34px; height: 34px; fill: currentColor; }
+html.mobile .repo-link { position: static; transform: none; display: flex; width: max-content; margin: 20px auto 0; }
